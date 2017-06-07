@@ -24,7 +24,7 @@
 				/* 11 is obsolete execv */
 #define	TARGET_FREEBSD_NR_chdir	12
 #define	TARGET_FREEBSD_NR_fchdir	13
-#define	TARGET_FREEBSD_NR_mknod	14
+#define	TARGET_FREEBSD_NR_freebsd11_mknod	14
 #define	TARGET_FREEBSD_NR_chmod	15
 #define	TARGET_FREEBSD_NR_chown	16
 #define	TARGET_FREEBSD_NR_break	17
@@ -180,14 +180,14 @@
 #define	TARGET_FREEBSD_NR_setgid	181
 #define	TARGET_FREEBSD_NR_setegid	182
 #define	TARGET_FREEBSD_NR_seteuid	183
-#define	TARGET_FREEBSD_NR_stat	188
-#define	TARGET_FREEBSD_NR_fstat	189
-#define	TARGET_FREEBSD_NR_lstat	190
+#define	TARGET_FREEBSD_NR_freebsd11_stat	188
+#define	TARGET_FREEBSD_NR_freebsd11_fstat	189
+#define	TARGET_FREEBSD_NR_freebsd11_lstat	190
 #define	TARGET_FREEBSD_NR_pathconf	191
 #define	TARGET_FREEBSD_NR_fpathconf	192
 #define	TARGET_FREEBSD_NR_getrlimit	194
 #define	TARGET_FREEBSD_NR_setrlimit	195
-#define	TARGET_FREEBSD_NR_getdirentries	196
+#define	TARGET_FREEBSD_NR_freebsd11_getdirentries	196
 #define	TARGET_FREEBSD_NR_freebsd6_mmap	197
 #define	TARGET_FREEBSD_NR___syscall	198
 #define	TARGET_FREEBSD_NR_freebsd6_lseek	199
@@ -233,7 +233,7 @@
 #define	TARGET_FREEBSD_NR_aio_read	255
 #define	TARGET_FREEBSD_NR_aio_write	256
 #define	TARGET_FREEBSD_NR_lio_listio	257
-#define	TARGET_FREEBSD_NR_getdents	272
+#define	TARGET_FREEBSD_NR_freebsd11_getdents	272
 #define	TARGET_FREEBSD_NR_lchmod	274
 #define	TARGET_FREEBSD_NR_netbsd_lchown	275
 #define	TARGET_FREEBSD_NR_lutimes	276
@@ -245,7 +245,7 @@
 #define	TARGET_FREEBSD_NR_pwritev	290
 #define	TARGET_FREEBSD_NR_freebsd4_fhstatfs	297
 #define	TARGET_FREEBSD_NR_fhopen	298
-#define	TARGET_FREEBSD_NR_fhstat	299
+#define	TARGET_FREEBSD_NR_freebsd11_fhstat	299
 #define	TARGET_FREEBSD_NR_modnext	300
 #define	TARGET_FREEBSD_NR_modstat	301
 #define	TARGET_FREEBSD_NR_modfnext	302
@@ -328,10 +328,10 @@
 #define	TARGET_FREEBSD_NR_uuidgen	392
 #define	TARGET_FREEBSD_NR_sendfile	393
 #define	TARGET_FREEBSD_NR_mac_syscall	394
-#define	TARGET_FREEBSD_NR_getfsstat	395
-#define	TARGET_FREEBSD_NR_statfs	396
-#define	TARGET_FREEBSD_NR_fstatfs	397
-#define	TARGET_FREEBSD_NR_fhstatfs	398
+#define	TARGET_FREEBSD_NR_freebsd11_getfsstat	395
+#define	TARGET_FREEBSD_NR_freebsd11_statfs	396
+#define	TARGET_FREEBSD_NR_freebsd11_fstatfs	397
+#define	TARGET_FREEBSD_NR_freebsd11_fhstatfs	398
 #define	TARGET_FREEBSD_NR_ksem_close	400
 #define	TARGET_FREEBSD_NR_ksem_post	401
 #define	TARGET_FREEBSD_NR_ksem_wait	402
@@ -415,12 +415,12 @@
 #define	TARGET_FREEBSD_NR_fchmodat	490
 #define	TARGET_FREEBSD_NR_fchownat	491
 #define	TARGET_FREEBSD_NR_fexecve	492
-#define	TARGET_FREEBSD_NR_fstatat	493
+#define	TARGET_FREEBSD_NR_freebsd11_fstatat	493
 #define	TARGET_FREEBSD_NR_futimesat	494
 #define	TARGET_FREEBSD_NR_linkat	495
 #define	TARGET_FREEBSD_NR_mkdirat	496
 #define	TARGET_FREEBSD_NR_mkfifoat	497
-#define	TARGET_FREEBSD_NR_mknodat	498
+#define	TARGET_FREEBSD_NR_freebsd11_mknodat	498
 #define	TARGET_FREEBSD_NR_openat	499
 #define	TARGET_FREEBSD_NR_readlinkat	500
 #define	TARGET_FREEBSD_NR_renameat	501
@@ -472,7 +472,16 @@
 #define	TARGET_FREEBSD_NR_numa_getaffinity	548
 #define	TARGET_FREEBSD_NR_numa_setaffinity	549
 #define	TARGET_FREEBSD_NR_fdatasync	550
-#define	TARGET_FREEBSD_NR_MAXSYSCALL	551
+#define	TARGET_FREEBSD_NR_fstat		551
+#define	TARGET_FREEBSD_NR_fstatat	552
+#define	TARGET_FREEBSD_NR_fhstat	553
+#define	TARGET_FREEBSD_NR_getdirentries	554
+#define	TARGET_FREEBSD_NR_statfs	555
+#define	TARGET_FREEBSD_NR_fstatfs	556
+#define	TARGET_FREEBSD_NR_getfsstat	557
+#define	TARGET_FREEBSD_NR_fhstatfs	558
+#define	TARGET_FREEBSD_NR_mknodat	559
+#define	TARGET_FREEBSD_NR_MAXSYSCALL	560
 /* Legacy system calls. */
 #ifndef	TARGET_FREEBSD_NR_killpg
 #define	TARGET_FREEBSD_NR_killpg	146

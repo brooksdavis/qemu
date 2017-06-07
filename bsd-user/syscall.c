@@ -705,11 +705,20 @@ abi_long do_freebsd_syscall(void *cpu_env, int num, abi_long arg1,
         ret = do_bsd_fchmodat(arg1, arg2, arg3, arg4);
         break;
 
-    case TARGET_FREEBSD_NR_mknod: /* mknod(2) */
-        ret = do_bsd_mknod(arg1, arg2, arg3);
+    /*
+     * The dev argument is already extended.  Will truncate created node
+     * if dev_t is too big, but mknod is unimportant in practice.
+     */
+    case TARGET_FREEBSD_NR_freebsd11_mknod: /* mknod(2) */
+        ret = do_bsd_mknodat(AT_FDCWD, arg1, arg2, arg3);
         break;
 
     case TARGET_FREEBSD_NR_mknodat: /* mknodat(2) */
+        ret = do_bsd_mknodat(arg1, arg2, arg3, arg4);
+        break;
+
+    /* See comment above TARGET_FREEBSD_NR_freebsd11_mknod. */
+    case TARGET_FREEBSD_NR_freebsd11_mknodat: /* mknodat(2) */
         ret = do_bsd_mknodat(arg1, arg2, arg3, arg4);
         break;
 
@@ -832,20 +841,29 @@ abi_long do_freebsd_syscall(void *cpu_env, int num, abi_long arg1,
         /*
          * stat system calls
          */
-    case TARGET_FREEBSD_NR_stat: /* stat(2) */
-        ret = do_freebsd_stat(arg1, arg2);
+    case TARGET_FREEBSD_NR_freebsd11_stat: /* stat(2) */
+        ret = do_freebsd11_fstatat(AT_FDCWD, arg1, arg2, 0);
         break;
 
-    case TARGET_FREEBSD_NR_lstat: /* lstat(2) */
-        ret = do_freebsd_lstat(arg1, arg2);
+    case TARGET_FREEBSD_NR_freebsd11_lstat: /* lstat(2) */
+        ret = do_freebsd11_fstatat(AT_FDCWD, arg1, arg2,
+	    AT_SYMLINK_NOFOLLOW);
         break;
 
     case TARGET_FREEBSD_NR_fstat: /* fstat(2) */
         ret = do_freebsd_fstat(arg1, arg2);
         break;
 
+    case TARGET_FREEBSD_NR_freebsd11_fstat: /* fstat(2) */
+        ret = do_freebsd11_fstat(arg1, arg2);
+        break;
+
     case TARGET_FREEBSD_NR_fstatat: /* fstatat(2) */
         ret = do_freebsd_fstatat(arg1, arg2, arg3, arg4);
+        break;
+
+    case TARGET_FREEBSD_NR_freebsd11_fstatat: /* fstatat(2) */
+        ret = do_freebsd11_fstatat(arg1, arg2, arg3, arg4);
         break;
 
 #if defined(__FreeBSD_version) && __FreeBSD_version < 1200031
@@ -878,28 +896,64 @@ abi_long do_freebsd_syscall(void *cpu_env, int num, abi_long arg1,
         ret = do_freebsd_fhstat(arg1, arg2);
         break;
 
+    case TARGET_FREEBSD_NR_freebsd11_fhstat: /* fhstat(2) */
+        ret = do_freebsd11_fhstat(arg1, arg2);
+        break;
+
     case TARGET_FREEBSD_NR_fhstatfs: /* fhstatfs(2) */
         ret = do_freebsd_fhstatfs(arg1, arg2);
+        break;
+
+    case TARGET_FREEBSD_NR_freebsd11_fhstatfs: /* fhstatfs(2) */
+        ret = do_freebsd11_fhstatfs(arg1, arg2);
         break;
 
     case TARGET_FREEBSD_NR_statfs: /* statfs(2) */
         ret = do_freebsd_statfs(arg1, arg2);
         break;
 
+    case TARGET_FREEBSD_NR_freebsd11_statfs: /* statfs(2) */
+        ret = do_freebsd11_statfs(arg1, arg2);
+        break;
+
     case TARGET_FREEBSD_NR_fstatfs: /* fstatfs(2) */
         ret = do_freebsd_fstatfs(arg1, arg2);
+        break;
+
+    case TARGET_FREEBSD_NR_freebsd11_fstatfs: /* fstatfs(2) */
+        ret = do_freebsd11_fstatfs(arg1, arg2);
         break;
 
     case TARGET_FREEBSD_NR_getfsstat: /* getfsstat(2) */
         ret = do_freebsd_getfsstat(arg1, arg2, arg3);
         break;
 
-    case TARGET_FREEBSD_NR_getdents: /* getdents(2) */
-        ret = do_freebsd_getdents(arg1, arg2, arg3);
+    case TARGET_FREEBSD_NR_freebsd11_getfsstat: /* getfsstat(2) */
+        ret = do_freebsd11_getfsstat(arg1, arg2, arg3);
+        break;
+
+    case TARGET_FREEBSD_NR_freebsd11_getdents: /* getdents(2) */
+#if defined(__FreeBSD_version) && __FreeBSD_version < 1200031
+        ret = do_freebsd_native_getdirentries(arg1, arg2, arg3, 0);
+#else
+        ret = do_freebsd11_getdirentries(arg1, arg2, arg3, 0);
+#endif
         break;
 
     case TARGET_FREEBSD_NR_getdirentries: /* getdirentries(2) */
-        ret = do_freebsd_getdirentries(arg1, arg2, arg3, arg4);
+#if defined(__FreeBSD_version) && __FreeBSD_version < 1200031
+        ret = do_freebsd12_getdirentries(arg1, arg2, arg3, arg4);
+#else
+        ret = do_freebsd_native_getdirentries(arg1, arg2, arg3, arg4);
+#endif
+        break;
+
+    case TARGET_FREEBSD_NR_freebsd11_getdirentries: /* getdirentries(2) */
+#if defined(__FreeBSD_version) && __FreeBSD_version < 1200031
+        ret = do_freebsd_native_getdirentries(arg1, arg2, arg3, 0);
+#else
+        ret = do_freebsd11_getdirentries(arg1, arg2, arg3, 0);
+#endif
         break;
 
     case TARGET_FREEBSD_NR_fcntl: /* fcntl(2) */

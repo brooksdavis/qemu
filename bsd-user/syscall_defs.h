@@ -457,6 +457,32 @@ struct target_ip_mreqn {
 #endif
 
 struct target_freebsd_stat {
+    uint64_t  st_dev;       /* inode's device */
+    uint64_t  st_ino;       /* inode's number */
+    int64_t   st_nlink;     /* number of hard links */ /*XXX-BD*/
+    int16_t   st_mode;      /* inode protection mode */
+    int16_t   st_padding0;
+    uint32_t  st_uid;       /* user ID of the file's owner */
+    uint32_t  st_gid;       /* group ID of the file's group */
+    uint32_t  st_padding1;
+    uint64_t  st_rdev;      /* device type */
+    /* XXX-BD: st_atim_ext */
+    struct  target_freebsd_timespec st_atim; /* time last accessed */
+    /* XXX-BD: st_mtim_ext */
+    struct  target_freebsd_timespec st_mtim; /* time last data modification */
+    /* XXX-BD: st_ctim_ext */
+    struct  target_freebsd_timespec st_ctim; /* time last file status change */
+    /* XXX-BD: st_btim_ext */
+    struct target_freebsd_timespec st_birthtim; /* time of file creation */
+    int64_t    st_size;     /* file size, in bytes */
+    int64_t    st_blocks;   /* blocks allocated for file */
+    uint32_t   st_blksize;  /* optimal blocksize for I/O */
+    uint32_t   st_flags;    /* user defined flags for file */
+    __uint64_t st_gen;      /* file generation number */
+    __uint64_t st_spare[10];
+} __packed;
+
+struct target_freebsd11_stat {
     uint32_t  st_dev;       /* inode's device */
     uint32_t  st_ino;       /* inode's number */
     int16_t   st_mode;      /* inode protection mode */
@@ -526,8 +552,8 @@ typedef struct target_freebsd_fsid { int32_t val[2]; } target_freebsd_fsid_t;
 
 /* filesystem statistics */
 #define TARGET_MFSNAMELEN   16  /* length of type name include null */
-#define TARGET_MNAMELEN     88  /* size of on/from name bufs */
-#define TARGET_STATFS_VERSION   0x20030518  /* current version number */
+#define TARGET_MNAMELEN     1024  /* size of on/from name bufs */
+#define TARGET_STATFS_VERSION   0x20140518  /* current version number */
 struct target_freebsd_statfs {
     uint32_t f_version; /* structure version number */
     uint32_t f_type;    /* type of filesystem */
@@ -551,6 +577,53 @@ struct target_freebsd_statfs {
     char     f_fstypename[TARGET_MFSNAMELEN];   /* filesys type name */
     char     f_mntfromname[TARGET_MNAMELEN];    /* mount filesystem */
     char     f_mntonname[TARGET_MNAMELEN];      /* dir on which mounted*/
+};
+
+/* filesystem statistics */
+#define FREEBSD11_MNAMELEN     88  /* size of on/from name bufs */
+#define FREEBSD11_STATFS_VERSION   0x20030518  /* current version number */
+struct target_freebsd11_statfs {
+    uint32_t f_version; /* structure version number */
+    uint32_t f_type;    /* type of filesystem */
+    uint64_t f_flags;   /* copy of mount exported flags */
+    uint64_t f_bsize;   /* filesystem fragment size */
+    uint64_t f_iosize;  /* optimal transfer block size */
+    uint64_t f_blocks;  /* total data blocks in filesystem */
+    uint64_t f_bfree;   /* free blocks in filesystem */
+    int64_t  f_bavail;  /* free blocks avail to non-superuser */
+    uint64_t f_files;   /* total file nodes in filesystem */
+    int64_t  f_ffree;   /* free nodes avail to non-superuser */
+    uint64_t f_syncwrites;  /* count of sync writes since mount */
+    uint64_t f_asyncwrites; /* count of async writes since mount */
+    uint64_t f_syncreads;   /* count of sync reads since mount */
+    uint64_t f_asyncreads;  /* count of async reads since mount */
+    uint64_t f_spare[10];   /* unused spare */
+    uint32_t f_namemax; /* maximum filename length */
+    uint32_t f_owner;   /* user that mounted the filesystem */
+    target_freebsd_fsid_t   f_fsid; /* filesystem id */
+    char     f_charspare[80];           /* spare string space */
+    char     f_fstypename[TARGET_MFSNAMELEN];   /* filesys type name */
+    char     f_mntfromname[FREEBSD11_MNAMELEN];    /* mount filesystem */
+    char     f_mntonname[FREEBSD11_MNAMELEN];      /* dir on which mounted*/
+};
+
+struct target_freebsd11_dirent {
+    uint32_t	d_fileno;		/* file number of entry */
+    uint16_t	d_reclen;		/* length of this record */
+    uint8_t	d_type;			/* file type, see below */
+    uint8_t	d_namlen;		/* length of string in d_name */
+    char	d_name[255 + 1];	/* name must be no longer than this */
+};
+
+struct target_freebsd12_dirent {
+    uint64_t	d_fileno;		/* file number of entry */
+    uint64_t	d_off;			/* directory offset of entry */
+    uint16_t	d_reclen;		/* length of this record */
+    uint8_t	d_type;			/* file type, see below */
+    uint8_t	d_pad0;
+    uint16_t	d_namlen;		/* length of string in d_name */
+    uint16_t	d_pad1;
+    char	d_name[255 + 1]; /* name must be no longer than this */
 };
 
 /* File identifier. These are unique per filesystem on a single machine. */

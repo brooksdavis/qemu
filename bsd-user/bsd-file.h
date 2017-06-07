@@ -730,20 +730,7 @@ static inline abi_long do_bsd_fchmodat(abi_long arg1, abi_long arg2,
     return ret;
 }
 
-/* mknod(2) */
-static inline abi_long do_bsd_mknod(abi_long arg1, abi_long arg2, abi_long arg3)
-{
-    abi_long ret;
-    void *p;
-
-    LOCK_PATH(p, arg1);
-    ret = get_errno(mknod(p, arg2, arg3)); /* XXX path(p)? */
-    UNLOCK_PATH(p, arg1);
-
-    return ret;
-}
-
-/* mknodat(2) */
+/* mknodat(2) (also mknod(2))*/
 static inline abi_long do_bsd_mknodat(abi_long arg1, abi_long arg2,
         abi_long arg3, abi_long arg4)
 {

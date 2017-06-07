@@ -35,38 +35,6 @@ int nlstat(const char *path, struct stat *sb);
 int nfstat(int fd, struct stat *sb);
 #endif
 
-/* stat(2) */
-static inline abi_long do_freebsd_stat(abi_long arg1, abi_long arg2)
-{
-    abi_long ret;
-    void *p;
-    struct stat st;
-
-    LOCK_PATH(p, arg1);
-    ret = get_errno(stat(path(p), &st));
-    UNLOCK_PATH(p, arg1);
-    if (!is_error(ret)) {
-        ret = h2t_freebsd_stat(arg2, &st);
-    }
-    return ret;
-}
-
-/* lstat(2) */
-static inline abi_long do_freebsd_lstat(abi_long arg1, abi_long arg2)
-{
-    abi_long ret;
-    void *p;
-    struct stat st;
-
-    LOCK_PATH(p, arg1);
-    ret = get_errno(lstat(path(p), &st));
-    UNLOCK_PATH(p, arg1);
-    if (!is_error(ret)) {
-        ret = h2t_freebsd_stat(arg2, &st);
-    }
-    return ret;
-}
-
 /* fstat(2) */
 static inline abi_long do_freebsd_fstat(abi_long arg1, abi_long arg2)
 {
@@ -76,6 +44,19 @@ static inline abi_long do_freebsd_fstat(abi_long arg1, abi_long arg2)
     ret = get_errno(fstat(arg1, &st));
     if (!is_error(ret))  {
         ret = h2t_freebsd_stat(arg2, &st);
+    }
+    return ret;
+}
+
+/* freebsd11_fstat(2) */
+static inline abi_long do_freebsd11_fstat(abi_long arg1, abi_long arg2)
+{
+    abi_long ret;
+    struct stat st;
+
+    ret = get_errno(fstat(arg1, &st));
+    if (!is_error(ret))  {
+        ret = h2t_freebsd11_stat(arg2, &st);
     }
     return ret;
 }
@@ -93,6 +74,23 @@ static inline abi_long do_freebsd_fstatat(abi_long arg1, abi_long arg2,
     UNLOCK_PATH(p, arg2);
     if (!is_error(ret) && arg3) {
         ret = h2t_freebsd_stat(arg3, &st);
+    }
+    return ret;
+}
+
+/* freebsd11_fstatat(2) */
+static inline abi_long do_freebsd11_fstatat(abi_long arg1, abi_long arg2,
+        abi_long arg3, abi_long arg4)
+{
+    abi_long ret;
+    void *p;
+    struct stat st;
+
+    LOCK_PATH(p, arg2);
+    ret = get_errno(fstatat(arg1, p, &st, arg4));
+    UNLOCK_PATH(p, arg2);
+    if (!is_error(ret) && arg3) {
+        ret = h2t_freebsd11_stat(arg3, &st);
     }
     return ret;
 }
@@ -208,6 +206,24 @@ static inline abi_long do_freebsd_fhstat(abi_long arg1, abi_long arg2)
     return h2t_freebsd_stat(arg2, &host_sb);
 }
 
+/* fhstat(2) */
+static inline abi_long do_freebsd11_fhstat(abi_long arg1, abi_long arg2)
+{
+    abi_long ret;
+    fhandle_t host_fh;
+    struct stat host_sb;
+
+    ret = t2h_freebsd_fhandle(&host_fh, arg1);
+    if (is_error(ret)) {
+        return ret;
+    }
+    ret = get_errno(fhstat(&host_fh, &host_sb));
+    if (is_error(ret)) {
+        return ret;
+    }
+    return h2t_freebsd11_stat(arg2, &host_sb);
+}
+
 /* fhstatfs(2) */
 static inline abi_long do_freebsd_fhstatfs(abi_ulong target_fhp_addr,
         abi_ulong target_stfs_addr)
@@ -227,6 +243,25 @@ static inline abi_long do_freebsd_fhstatfs(abi_ulong target_fhp_addr,
     return h2t_freebsd_statfs(target_stfs_addr, &host_stfs);
 }
 
+/* fhstatfs(2) */
+static inline abi_long do_freebsd11_fhstatfs(abi_ulong target_fhp_addr,
+        abi_ulong target_stfs_addr)
+{
+    abi_long ret;
+    fhandle_t host_fh;
+    struct statfs host_stfs;
+
+    ret = t2h_freebsd_fhandle(&host_fh, target_fhp_addr);
+    if (is_error(ret)) {
+        return ret;
+    }
+    ret = get_errno(fhstatfs(&host_fh, &host_stfs));
+    if (is_error(ret)) {
+        return ret;
+    }
+    return h2t_freebsd11_statfs(target_stfs_addr, &host_stfs);
+}
+
 /* statfs(2) */
 static inline abi_long do_freebsd_statfs(abi_long arg1, abi_long arg2)
 {
@@ -244,6 +279,23 @@ static inline abi_long do_freebsd_statfs(abi_long arg1, abi_long arg2)
     return h2t_freebsd_statfs(arg2, &host_stfs);
 }
 
+/* statfs(2) */
+static inline abi_long do_freebsd11_statfs(abi_long arg1, abi_long arg2)
+{
+    abi_long ret;
+    void *p;
+    struct statfs host_stfs;
+
+    LOCK_PATH(p, arg1);
+    ret = get_errno(statfs(path(p), &host_stfs));
+    UNLOCK_PATH(p, arg1);
+    if (is_error(ret)) {
+        return ret;
+    }
+
+    return h2t_freebsd11_statfs(arg2, &host_stfs);
+}
+
 /* fstatfs(2) */
 static inline abi_long do_freebsd_fstatfs(abi_long fd, abi_ulong target_addr)
 {
@@ -256,6 +308,20 @@ static inline abi_long do_freebsd_fstatfs(abi_long fd, abi_ulong target_addr)
     }
 
     return h2t_freebsd_statfs(target_addr, &host_stfs);
+}
+
+/* freebsd11_fstatfs(2) */
+static inline abi_long do_freebsd11_fstatfs(abi_long fd, abi_ulong target_addr)
+{
+    abi_long ret;
+    struct statfs host_stfs;
+
+    ret = get_errno(fstatfs(fd, &host_stfs));
+    if (is_error(ret)) {
+        return ret;
+    }
+
+    return h2t_freebsd11_statfs(target_addr, &host_stfs);
 }
 
 /* getfsstat(2) */
@@ -296,39 +362,46 @@ static inline abi_long do_freebsd_getfsstat(abi_ulong target_addr,
     return ret;
 }
 
-/* getdents(2) */
-static inline abi_long do_freebsd_getdents(abi_long arg1, abi_ulong arg2,
-        abi_long nbytes)
+/* freebsd11_getfsstat(2) */
+static inline abi_long do_freebsd11_getfsstat(abi_ulong target_addr,
+        abi_long bufsize, abi_long flags)
 {
     abi_long ret;
-    struct dirent *dirp;
+    struct statfs *host_stfs;
+    int count;
+    long host_bufsize;
 
-    dirp = lock_user(VERIFY_WRITE, arg2, nbytes, 0);
-    if (dirp == NULL) {
-        return -TARGET_EFAULT;
+    count = bufsize / sizeof(struct target_freebsd11_statfs);
+
+    /* if user buffer is NULL then return number of mounted FS's */
+    if (target_addr == 0 || count == 0) {
+        return get_errno(getfsstat(NULL, 0, flags));
     }
-    ret = get_errno(getdents(arg1, (char *)dirp, nbytes));
-    if (!is_error(ret)) {
-        struct dirent *de;
-        int len = ret;
-        int reclen;
 
-        de = dirp;
-        while (len > 0) {
-            reclen = de->d_reclen;
-            if (reclen > len) {
-                return -TARGET_EFAULT;
-            }
-            de->d_reclen = tswap16(reclen);
-            de->d_fileno = tswap32(de->d_fileno);
-            len -= reclen;
+    /* XXX check count to be reasonable */
+    host_bufsize = sizeof(struct statfs) * count;
+    host_stfs = alloca(host_bufsize);
+    if (!host_stfs) {
+        return -TARGET_EINVAL;
+    }
+
+    ret = count = get_errno(getfsstat(host_stfs, host_bufsize, flags));
+    if (is_error(ret)) {
+        return ret;
+    }
+
+    while (count--) {
+        if (h2t_freebsd11_statfs((target_addr +
+                        (count * sizeof(struct target_freebsd11_statfs))),
+                    &host_stfs[count])) {
+            return -TARGET_EFAULT;
         }
     }
     return ret;
 }
 
-/* getdirecentries(2) */
-static inline abi_long do_freebsd_getdirentries(abi_long arg1, abi_ulong arg2,
+/* getdirecentries(2) (also getdents(2)) */
+static inline abi_long do_freebsd_native_getdirentries(abi_long arg1, abi_ulong arg2,
         abi_long nbytes, abi_ulong arg4)
 {
     abi_long ret;
@@ -359,6 +432,149 @@ static inline abi_long do_freebsd_getdirentries(abi_long arg1, abi_ulong arg2,
     }
     unlock_user(dirp, arg2, ret);
     if (arg4) {
+        if (put_user(basep, arg4, abi_ulong)) {
+            return -TARGET_EFAULT;
+        }
+    }
+    return ret;
+}
+
+/* getdirecentries(2) (also getdents(2)) for FreeBSD host before ino64 */
+static inline abi_long do_freebsd11_getdirentries(abi_long arg1, abi_ulong arg2,
+        abi_long nbytes, abi_ulong arg4)
+{
+    abi_long ret;
+    struct target_freebsd11_dirent *dirp;
+    size_t host_buf_size;
+    struct dirent *host_buf;
+    long basep;
+
+    /* XXX: Limit?  Kernel uses IOSZIE_MAX which is huge! */
+    /*
+     * The minium size of an target_freebsd11_dirent is:
+     *    __offsetof(struct target_freebsd11_dirent, d_name) + 4 -> 12
+     * The minium size of a FreeBSD 12 struct dirent is:
+     *   __offsetof(struct dirent, d_name) + 8 -> 32
+     * Thus our native request size is:
+     */
+    host_buf_size = (nbytes / 12) * 32;
+    host_buf = malloc(host_buf_size);
+    if (host_buf == NULL) {
+        return -TARGET_EINVAL;
+    }
+
+    dirp = lock_user(VERIFY_WRITE, arg2, nbytes, 0);
+    if (dirp == NULL) {
+        free(host_buf);
+        return -TARGET_EFAULT;
+    }
+
+    ret = get_errno(getdirentries(arg1, (char *)host_buf, host_buf_size,
+        &basep));
+    if (!is_error(ret)) {
+        struct dirent *de;
+        struct target_freebsd11_dirent *tde;
+        int len = ret;
+        int treclen;
+
+        ret = 0;
+        de = host_buf;
+        tde = dirp;
+        while (len > 0) {
+            treclen = (8 + de->d_namlen + 1 + 3) & ~3;
+            if (de->d_reclen > len || ret + treclen > nbytes) {
+                free(host_buf);
+                unlock_user(dirp, arg2, 0);
+                return -TARGET_EFAULT;
+            }
+            tde->d_fileno = tswap64(de->d_fileno);
+            tde->d_reclen = tswap16(treclen);
+            tde->d_type = de->d_type;
+            tde->d_namlen = tswap16(de->d_namlen);
+            /* Copy out and zero-pad name */
+            strncpy(tde->d_name, de->d_name, (tde->d_namlen + 1) & ~3);
+            len -= de->d_reclen;
+            ret += treclen;
+            de = (struct dirent *)((void *)de + de->d_reclen);
+            tde = (struct target_freebsd11_dirent *)((void *)tde + treclen);
+        }
+    }
+    free(host_buf);
+    unlock_user(dirp, arg2, is_error(ret) ? 0 : ret);
+    if (arg4 && !is_error(ret)) {
+        if (put_user(basep, arg4, abi_ulong)) {
+            return -TARGET_EFAULT;
+        }
+    }
+    return ret;
+}
+
+/* getdirecentries(2) (also getdents(2)) for FreeBSD host before ino64 */
+static inline abi_long do_freebsd12_getdirentries(abi_long arg1, abi_ulong arg2,
+        abi_long nbytes, abi_ulong arg4)
+{
+    abi_long ret;
+    struct target_freebsd12_dirent *dirp;
+    size_t host_buf_size;
+    struct dirent *host_buf;
+    long basep;
+
+    /* XXX: Limit?  Kernel uses IOSZIE_MAX which is huge! */
+    /*
+     * The minium size of an target_freebsd12_dirent is:
+     *    __offsetof(struct target_freebsd12_dirent, d_name) + 8 -> 32
+     * The minium size of a FreeBSD 11 struct dirent is:
+     *   __offsetof(struct dirent, d_name) + 4 -> 12
+     * Thus our native request size is:
+     */
+    host_buf_size = (nbytes / 32) * 12;
+    host_buf = malloc(host_buf_size);
+    if (host_buf == NULL) {
+        return -TARGET_EINVAL;
+    }
+
+    dirp = lock_user(VERIFY_WRITE, arg2, nbytes, 0);
+    if (dirp == NULL) {
+        free(host_buf);
+        return -TARGET_EFAULT;
+    }
+
+    ret = get_errno(getdirentries(arg1, (char *)host_buf, host_buf_size,
+        &basep));
+    if (!is_error(ret)) {
+        struct dirent *de;
+        struct target_freebsd12_dirent *tde;
+        int len = ret;
+        int treclen;
+
+        ret = 0;
+        de = host_buf;
+        tde = dirp;
+        while (len > 0) {
+            treclen = (24 + de->d_namlen + 1 + 7) & ~7;
+            if (de->d_reclen > len || ret + treclen > nbytes) {
+                free(host_buf);
+                unlock_user(dirp, arg2, 0);
+                return -TARGET_EFAULT;
+            }
+            tde->d_fileno = tswap64(de->d_fileno);
+            tde->d_off = 0;	/* XXX -1? */
+            tde->d_reclen = tswap16(treclen);
+            tde->d_type = de->d_type;
+            tde->d_pad0 = 0;
+            tde->d_namlen = tswap16(de->d_namlen);
+            tde->d_pad1 = 0;
+            /* Copy out and zero-pad name */
+            strncpy(tde->d_name, de->d_name, (tde->d_namlen + 1) & ~7);
+            len -= de->d_reclen;
+            ret += treclen;
+            de = (struct dirent *)((void *)de + de->d_reclen);
+            tde = (struct target_freebsd12_dirent *)((void *)tde + treclen);
+        }
+    }
+    free(host_buf);
+    unlock_user(dirp, arg2, is_error(ret) ? 0 : ret);
+    if (arg4 && !is_error(ret)) {
         if (put_user(basep, arg4, abi_ulong)) {
             return -TARGET_EFAULT;
         }
